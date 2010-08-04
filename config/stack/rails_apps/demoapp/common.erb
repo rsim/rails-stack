@@ -1,0 +1,48 @@
+# Error documents
+ErrorDocument 404 /404.html
+ErrorDocument 422 /422.html
+ErrorDocument 500 /500.html
+ErrorDocument 503 /500.html
+# Proxy errors/timeouts
+ErrorDocument 502 /500.html
+ErrorDocument 504 /500.html
+
+# Deflate
+AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/x-javascript
+BrowserMatch ^Mozilla/4 gzip-only-text/html
+BrowserMatch ^Mozilla/4\.0[678] no-gzip
+BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+
+# Expire
+<Directory ~ "/(javascripts|images|stylesheets)/">
+  ExpiresActive On
+  ExpiresByType image/gif                "access plus 30 days"
+  ExpiresByType image/jpeg               "access plus 30 days"
+  ExpiresByType image/png                "access plus 30 days"
+  ExpiresByType text/css                 "access plus 30 days"
+  ExpiresByType text/javascript          "access plus 30 days"
+  ExpiresByType application/javascript   "access plus 30 days"
+  ExpiresByType application/x-javascript "access plus 30 days"
+</Directory>
+
+# Disable ETags
+FileETag none
+
+# Don't do forward proxying
+ProxyRequests Off
+
+# Allow rewrite
+RewriteEngine On
+
+# Allow maintenance mode
+RewriteCond %{DOCUMENT_ROOT}/system/maintenance.html -f
+RewriteCond %{SCRIPT_FILENAME} !maintenance.html
+RewriteCond %{REQUEST_FILENAME} !\.css$
+RewriteCond %{REQUEST_FILENAME} !\.gif$
+RewriteCond %{REQUEST_FILENAME} !\.png$
+RewriteRule ^.*$ /system/maintenance.html [L]
+
+# Ignore bad urls
+RewriteRule ^/_vti_bin/ - [F]
+RewriteRule ^/MSOffice/ - [F]
+RewriteRule .+/favicon.ico$ /favicon.ico

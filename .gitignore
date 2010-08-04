@@ -1,0 +1,5 @@
+config/deploy.rb
+config/install.rb
+config/stack/rails_apps/*
+!config/stack/rails_apps/demoapp
+config/stack/oracle/tnsnames.ora.erb

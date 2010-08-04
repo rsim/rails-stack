@@ -1,0 +1,8 @@
+Listen 8000
+
+<VirtualHost *:8000>
+  # ServerName example.com
+  DocumentRoot <%= RAILS_APPS_PATH %>/<%= application %>/<%= environment %>/current/public
+
+  Include "<%= APACHE_SITES_PATH %>/<%= application %>-common"
+</VirtualHost>

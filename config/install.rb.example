@@ -1,0 +1,90 @@
+$:<< File.join(File.dirname(__FILE__), 'stack')
+
+# process command line parameters
+params = ARGV.inject({}){|h,v| param, value = v.split('='); h[param]=value if value; h}
+
+::INSTALL_SITE = params['SITE'] || 'local'
+puts "==> Installing site: #{INSTALL_SITE}"
+
+# site specific configuration parameters
+case INSTALL_SITE
+when 'local'
+  ::INSTALL_CONFIG = {
+    # specify proxy server if needed
+    :http_proxy => "http://proxy:8080",
+    # specify
+    :rails_apps => {
+      'demoapp' => %w(production),
+      'pais' => %w(demo)
+    }
+  }
+# add additional sites if needed
+when 'demo'
+  ::INSTALL_CONFIG = {
+  }
+end
+# common configuration parameters
+::INSTALL_CONFIG.merge!({
+  # specify mirror copy of Oracle Instant Client 64-bit Linux client zip files
+  # (as original Oracle location is password protected)
+  :oracle_downloads_url => "http://example.com/downloads",
+})
+# specify platform - ubuntu, redhat or centos (currently just ubuntu is supported)
+::INSTALL_PLATFORM = params['PLATFORM'] || 'ubuntu'
+puts "==> Install platform: #{INSTALL_PLATFORM}"
+
+# Patches for Sprinkle
+%w(sprinkle_installers_binary sprinkle_installers_transfer).each do |lib|
+  require "patches/#{lib}"
+end
+
+# Require the stack base
+%w(set_proxy essential scm ruby_enterprise oracle apache rails_apps).each do |lib|
+  require lib
+end
+
+# What we're installing to your server
+# Take what you want, leave what you don't
+# Build up your own and strip down your server until you get it right. 
+policy :stack, :roles => :app do
+  requires :set_proxy               # Set http_proxy if necessary
+  requires :ruby_enterprise         # Ruby Enterprise edition
+  requires :apache
+  requires :oracle_client
+  requires :git
+  requires :subversion
+  requires :passenger
+  requires :rails_apps
+end
+
+deployment do
+  # mechanism for deployment
+  delivery :capistrano do
+    begin
+      recipes 'Capfile'
+    rescue LoadError
+      recipes 'deploy'
+    end
+  end
+
+  # source based package installer defaults
+  source do
+    prefix   '/usr/local'
+    archives '/usr/local/src'
+    builds   '/usr/local/src'
+  end
+
+  binary do
+    prefix   '/usr/local'
+    archives '/usr/local/src'
+  end
+end
+
+# Depend on a specific version of sprinkle and erubis
+begin
+  gem 'sprinkle', "~> 0.3.1"
+  gem 'erubis', "~> 2.6.6"
+rescue Gem::LoadError
+  puts "sprinkle 0.3.1 and erubis 2.6.6 required.\n Run: `[sudo] gem install sprinkle erubis`"
+  exit
+end
