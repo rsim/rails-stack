@@ -28,6 +28,13 @@ end
   # specify mirror copy of Oracle Instant Client 64-bit Linux client zip files
   # (as original Oracle location is password protected)
   :oracle_downloads_url => "http://example.com/downloads",
+  # Specify necessary gems for applications which do not use Bundler
+  :rails_app_gems => {
+    'demoapp' => [
+      %w( rails 2.3.5 ),
+      'will_paginate',
+    ]
+  },
 })
 # specify platform - ubuntu, redhat or centos (currently just ubuntu is supported)
 ::INSTALL_PLATFORM = params['PLATFORM'] || 'ubuntu'

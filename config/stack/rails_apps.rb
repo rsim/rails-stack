@@ -7,7 +7,7 @@ package :rails_apps do
   end
 
   # requires :passenger
-  requires :rails_user, :rails_sites, :bundler
+  requires :rails_user, :bundler, :rails_app_gems, :rails_sites
 end
 
 package :rails_user do
@@ -68,12 +68,30 @@ package :rails_sites do
 
 end
 
+package :rails_app_gems do
+  gems = []
+  INSTALL_CONFIG[:rails_apps].each do |app_name, environments|
+    if app_gems = INSTALL_CONFIG[:rails_app_gems][app_name]
+      gems = gems.concat app_gems
+    end
+  end
+  gems = gems.uniq.map{|gem_name_with_version| gem_name_with_version.to_a}
+  puts "==> Checking/installing Ruby gems: #{gems.map{|g| g.join(' ')}.join(', ')}"
+  noop do
+    gems.each do |gem_name, gem_version|
+      version_option = gem_version.nil? ? '' : "--version '#{gem_version}'"
+      post :install, "gem list '#{gem_name}' --installed #{version_option} > /dev/null || " <<
+        "sudo gem install #{gem_name} #{version_option} --no-rdoc --no-ri"
+    end
+  end
+end
+
 package :bundler do
   BUNDLER_VERSION = "0.9.26"
   gem 'bundler', BUNDLER_VERSION do
     post :install, "ln -sf #{REE_PATH}/bin/bundle /usr/local/bin/bundle"
-    verify do
-      has_executable_with_version "#{REE_PATH}/bin/bundle", BUNDLER_VERSION
-    end
+  end
+  verify do
+    has_executable_with_version "#{REE_PATH}/bin/bundle", BUNDLER_VERSION
   end
 end
