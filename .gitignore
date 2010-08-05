@@ -1,3 +1,4 @@
+.svn
 config/deploy.rb
 config/install.rb
 config/stack/rails_apps/*
