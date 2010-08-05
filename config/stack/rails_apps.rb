@@ -18,16 +18,39 @@ package :rails_user do
   noop do
     pre :install, "groupadd #{RAILS_GROUP}"
     pre :install, "useradd -g #{RAILS_GROUP} -c \"Ruby on Rails applications\" -m -s /bin/bash #{RAILS_USER}"
-    pre :install, "mkdir -p /home/#{RAILS_USER}/.ssh"
-    pre :install, "cp -f ~/.ssh/authorized_keys /home/#{RAILS_USER}/.ssh/authorized_keys"
-    pre :install, "chown -R #{RAILS_USER}:#{RAILS_GROUP} /home/#{RAILS_USER}/.ssh/"
-    pre :install, "chmod 0600 /home/#{RAILS_USER}/.ssh/authorized_keys"
   end
 
   verify do
     file_contains '/etc/passwd', "#{RAILS_USER}:"
     has_directory "/home/#{RAILS_USER}"
-    has_file "/home/#{RAILS_USER}/.ssh/authorized_keys"
+  end
+
+  optional :rails_user_authorized_keys
+end
+
+package :rails_user_authorized_keys do
+  noop do
+    pre :install, "mkdir -p /home/#{RAILS_USER}/.ssh"
+  end
+  if INSTALL_CONFIG[:rails_user_authorized_keys]
+    authorized_keys = INSTALL_CONFIG[:rails_user_authorized_keys].map do |key|
+      public_key = File.read(File.expand_path("../../keydir/#{key}.pub", __FILE__))
+    end.join('')
+
+    push_text authorized_keys, "/home/#{RAILS_USER}/.ssh/authorized_keys", :sudo => true do
+      pre :install, "mkdir -p /home/#{RAILS_USER}/.ssh"
+      pre :install, "tee /home/#{RAILS_USER}/.ssh/authorized_keys </dev/null"
+      post :install, "chmod 0600 /home/#{RAILS_USER}/.ssh/authorized_keys"
+    end
+  else
+    noop do
+      pre :install, "test -f ~/.ssh/authorized_keys && " <<
+                    "sudo cp -f ~/.ssh/authorized_keys /home/#{RAILS_USER}/.ssh/authorized_keys && " <<
+                    "sudo chmod 0600 /home/#{RAILS_USER}/.ssh/authorized_keys"
+    end
+  end
+  noop do
+    post :install, "chown -R #{RAILS_USER}:#{RAILS_GROUP} /home/#{RAILS_USER}/.ssh/"
   end
 end
 
