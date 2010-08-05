@@ -1,9 +1,15 @@
-# Rename this file to deploy.rb
+# Copy this this file to deploy.rb
 
-# Fill slice_url in - where you're installing your stack to
-role :app, "your-app-server.com"
+# For each site specify servers for each role
 
-# Fill user in - if remote user is different to your local user
-# set :user, "username"
+case INSTALL_SITE
+when 'local'
+  role :app, "localserver"
+  set :user, "username"
+when 'demo'
+  role :app, "your-app-server.com"
+  set :user, "username"
+end
 
 default_run_options[:pty] = true
+

@@ -1,3 +1,5 @@
+# Copy this this file to install.rb
+
 $:<< File.join(File.dirname(__FILE__), 'stack')
 
 # process command line parameters
