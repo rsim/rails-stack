@@ -76,6 +76,8 @@ deployment do
     rescue LoadError
       recipes 'deploy'
     end
+    # Uncomment next line to see server output after command execution
+    # logger.level = ::Capistrano::Logger::INFO
   end
 
   # source based package installer defaults
