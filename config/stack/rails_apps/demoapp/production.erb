@@ -5,4 +5,7 @@ Listen 8000
   DocumentRoot <%= RAILS_APPS_PATH %>/<%= application %>/<%= environment %>/current/public
 
   Include "<%= APACHE_SITES_PATH %>/<%= application %>-common"
+
+  RailsBaseURI /
+  RailsEnv production
 </VirtualHost>
