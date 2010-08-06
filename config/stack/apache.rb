@@ -50,8 +50,8 @@ package :passenger_conf do
   transfer File.expand_path('../apache/passenger.conf.erb', __FILE__), "#{apache_conf_dir}/passenger.conf" do
     sudo true
     mode 0644
-    # Restart apache to note changes
-    post :install, "/etc/init.d/apache2 restart"
+    # Do not restart apache as rails_apps package will update site specific configuration files and will restart at the end
+    # post :install, "/etc/init.d/apache2 restart"
   end
 
 end

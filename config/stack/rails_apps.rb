@@ -44,9 +44,12 @@ package :rails_user_authorized_keys do
     end
   else
     noop do
+      # Only create ~RAILS_USER/.ssh/authorized_keys if not present
       pre :install, "test -f ~/.ssh/authorized_keys && " <<
+                    "sudo test ! -f /home/#{RAILS_USER}/.ssh/authorized_keys && " <<
                     "sudo cp -f ~/.ssh/authorized_keys /home/#{RAILS_USER}/.ssh/authorized_keys && " <<
-                    "sudo chmod 0600 /home/#{RAILS_USER}/.ssh/authorized_keys"
+                    "sudo chmod 0600 /home/#{RAILS_USER}/.ssh/authorized_keys || " <<
+                    "echo \"No source authorized_keys found or authorized_keys already created\""
     end
   end
   noop do
