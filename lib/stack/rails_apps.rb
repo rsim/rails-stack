@@ -2,11 +2,22 @@ require "stack/ruby_enterprise"
 require "stack/apache"
 
 package :rails_apps do
-  APACHE_SITES_PATH = "/etc/apache2/sites-available"
+  case INSTALL_PLATFORM
+  when 'ubuntu'
+    APACHE_SITES_PATH = "/etc/apache2/sites-available"
+  when 'redhat', 'centos'
+    APACHE_SITES_PATH = "/etc/httpd/sites-available"
+    APACHE_CONFD_PATH = "/etc/httpd/conf.d"
+  end
 
   noop do
     # Restart apache after all changes
-    post :install, "/etc/init.d/apache2 restart"
+    case INSTALL_PLATFORM
+    when 'ubuntu'
+      post :install, "/etc/init.d/apache2 restart"
+    when 'redhat', 'centos'
+      post :install, "/etc/init.d/httpd restart"
+    end
   end
 
   # requires :passenger
@@ -19,8 +30,8 @@ package :rails_user do
   RAILS_APPS_PATH = "/home/#{RAILS_USER}"
 
   noop do
-    pre :install, "groupadd #{RAILS_GROUP}"
-    pre :install, "useradd -g #{RAILS_GROUP} -c \"Ruby on Rails applications\" -m -s /bin/bash #{RAILS_USER}"
+    pre :install, "/usr/sbin/groupadd #{RAILS_GROUP}"
+    pre :install, "/usr/sbin/useradd -g #{RAILS_GROUP} -c \"Ruby on Rails applications\" -m -s /bin/bash #{RAILS_USER}"
   end
 
   verify do
@@ -89,7 +100,12 @@ package :rails_sites do
           :locals => {:application => application, :environment => environment} do
         sudo true
         mode 0644
-        post :install, "a2ensite #{application}-#{environment}" unless environment == 'common'
+        case INSTALL_PLATFORM
+        when 'ubuntu'
+          post :install, "a2ensite #{application}-#{environment}" unless environment == 'common'
+        when 'redhat', 'centos'
+          post :install, "ln -sf #{APACHE_SITES_PATH}/#{application}-#{environment} #{APACHE_CONFD_PATH}/100-#{application}-#{environment}.conf" unless environment == 'common'
+        end
       end
     end
 
@@ -116,8 +132,9 @@ package :rails_app_gems do
 end
 
 package :bundler do
-  BUNDLER_VERSION = "0.9.26"
-  gem 'bundler', BUNDLER_VERSION do
+  BUNDLER_VERSION = "1.0.0.rc.5"
+  gem 'bundler' do
+    version BUNDLER_VERSION
     post :install, "ln -sf #{REE_PATH}/bin/bundle /usr/local/bin/bundle"
   end
   verify do
