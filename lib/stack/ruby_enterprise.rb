@@ -10,8 +10,8 @@ package :ruby_enterprise do
   end
 
   verify do
-    has_directory install_path
-    has_executable "#{REE_PATH}/bin/ruby"
+    has_directory REE_PATH
+    has_executable_with_version "#{REE_PATH}/bin/ruby", version.gsub('-','.*')
     binaries.each {|bin| has_symlink "/usr/local/bin/#{bin}", "#{REE_PATH}/bin/#{bin}" }
   end
 
@@ -19,6 +19,15 @@ package :ruby_enterprise do
 end
 
 package :ree_dependencies do
-  apt %w(zlib1g-dev libreadline5-dev libssl-dev)
+  case INSTALL_PLATFORM
+  when 'ubuntu'
+    apt %w(zlib1g-dev libreadline5-dev libssl-dev)
+  when 'redhat', 'centos'
+    dependencies = %w(zlib-devel readline-devel openssl-devel)
+    yum dependencies
+    verify do
+      dependencies.each{|d| has_yum d}
+    end
+  end
   requires :build_essential
 end
