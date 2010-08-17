@@ -2,15 +2,26 @@ require "stack/ruby_enterprise"
 
 package :apache do
   description 'Apache2 web server.'
-  apt 'apache2 apache2.2-common apache2-mpm-prefork apache2-utils libexpat1 ssl-cert' do
-    %w(rewrite expires proxy).each do |module_name|
-      post :install, "a2enmod #{module_name}"
+  case INSTALL_PLATFORM
+  when 'ubuntu'
+    apt 'apache2 apache2.2-common apache2-mpm-prefork apache2-utils libexpat1 ssl-cert' do
+      %w(rewrite expires proxy).each do |module_name|
+        post :install, "a2enmod #{module_name}"
+      end
+      post :install, 'a2dissite default'
     end
-    post :install, 'a2dissite default'
-  end
 
-  verify do
-    has_executable '/usr/sbin/apache2'
+    verify do
+      has_executable '/usr/sbin/apache2'
+    end
+
+  when 'redhat', 'centos'
+    yum 'httpd-devel apr-devel'
+
+    verify do
+      has_executable '/usr/sbin/httpd'
+    end
+
   end
 
   requires :build_essential
@@ -19,7 +30,10 @@ end
 
 package :apache2_prefork_dev do
   description 'A dependency required by some packages.'
-  apt 'apache2-prefork-dev'
+  case INSTALL_PLATFORM
+  when 'ubuntu'
+    apt 'apache2-prefork-dev'
+  end
 end
 
 package :passenger do
@@ -46,10 +60,15 @@ package :passenger_gem do
 end
 
 package :passenger_conf do
-  apache_conf_dir = "/etc/apache2/conf.d"
+  apache_conf_file = case INSTALL_PLATFORM
+    when 'ubuntu'
+      '/etc/apache2/conf.d/passenger.conf'
+    when 'redhat', 'centos'
+      '/etc/httpd/conf.d/000-passenger.conf'
+    end
 
   # Create the passenger conf file
-  transfer File.join(STACK_CONFIG_PATH,'apache/passenger.conf.erb'), "#{apache_conf_dir}/passenger.conf" do
+  transfer File.join(STACK_CONFIG_PATH,'apache/passenger.conf.erb'), "#{apache_conf_file}" do
     sudo true
     mode 0644
     # Do not restart apache as rails_apps package will update site specific configuration files and will restart at the end

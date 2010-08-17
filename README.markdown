@@ -4,7 +4,9 @@ Based on [Passenger stack](http://github.com/benschwarz/passenger-stack) and [Yu
 
 ## How to get your sprinkle on:
 
-* Get a new server (64-bit Ubuntu supported now, will create support for Redhat or CentOS as well)
+* Get one of the following 64-bit Linux servers (physical or virtual)
+  * Ubuntu (tested with 10.4)
+  * RedHat or CentOS (tested with 5.4) with disabled SELinux
 * Install/enable ssh server on remote server
 * Create yourself a user, add yourself to the /etc/sudoers file
 * On Ubuntu set proxy server for apt-get if necessary (in /etc/apt/apt.conf)
