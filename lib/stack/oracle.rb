@@ -55,7 +55,7 @@ package :oracle_sqlplus_client do
 end
 
 package :oracle_tnsnames do
-  transfer File.expand_path('../oracle/tnsnames.ora.erb', __FILE__), "#{ORACLE_TNSNAMES_PATH}/tnsnames.ora" do
+  transfer File.join(STACK_CONFIG_PATH, 'oracle/tnsnames.ora.erb'), "#{ORACLE_TNSNAMES_PATH}/tnsnames.ora" do
     sudo true
     mode 0644
     pre :install, "mkdir -p #{ORACLE_TNSNAMES_PATH}"

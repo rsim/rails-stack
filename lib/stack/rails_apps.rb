@@ -1,3 +1,6 @@
+require "stack/ruby_enterprise"
+require "stack/apache"
+
 package :rails_apps do
   APACHE_SITES_PATH = "/etc/apache2/sites-available"
 
@@ -34,7 +37,7 @@ package :rails_user_authorized_keys do
   end
   if INSTALL_CONFIG[:rails_user_authorized_keys]
     authorized_keys = INSTALL_CONFIG[:rails_user_authorized_keys].map do |key|
-      public_key = File.read(File.expand_path("../../keydir/#{key}.pub", __FILE__))
+      public_key = File.read(File.join(STACK_CONFIG_PATH, "keydir/#{key}.pub"))
     end.join('')
 
     push_text authorized_keys, "/home/#{RAILS_USER}/.ssh/authorized_keys", :sudo => true do
@@ -65,7 +68,7 @@ package :rails_sites do
   INSTALL_CONFIG[:rails_apps].each do |app_name, environments|
     application app_name
     puts "==> Installing Rails application: #{application}"
-    app_dir = File.expand_path("../rails_apps/#{application}", __FILE__)
+    app_dir = File.join(STACK_CONFIG_PATH, "rails_apps/#{application}")
     raise "Missing application directory #{app_dir}" unless File.directory?(app_dir)
 
     common_file = "#{app_dir}/common.erb"

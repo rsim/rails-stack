@@ -1,6 +1,8 @@
 # Copy this this file to install.rb
 
-$:<< File.join(File.dirname(__FILE__), 'stack')
+::STACK_CONFIG_PATH = File.expand_path('../stack', __FILE__)
+::STACK_LIB_PATH = File.expand_path('../../lib', __FILE__)
+$:<< STACK_LIB_PATH
 
 # process command line parameters
 params = ARGV.inject({}){|h,v| param, value = v.split('='); h[param]=value if value; h}
@@ -45,13 +47,13 @@ end
 puts "==> Install platform: #{INSTALL_PLATFORM}"
 
 # Patches for Sprinkle
-%w(sprinkle_installers_binary sprinkle_installers_transfer).each do |lib|
-  require "patches/#{lib}"
+Dir["#{STACK_LIB_PATH}/stack/patches/*.rb"].each do |lib|
+  require "stack/patches/#{File.basename(lib)[0..-4]}"
 end
 
 # Require the stack base
-%w(set_proxy essential scm ruby_enterprise oracle apache rails_apps).each do |lib|
-  require lib
+Dir["#{STACK_LIB_PATH}/stack/*.rb"].each do |lib|
+  require "stack/#{File.basename(lib)[0..-4]}"
 end
 
 # What we're installing to your server

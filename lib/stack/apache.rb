@@ -1,3 +1,5 @@
+require "stack/ruby_enterprise"
+
 package :apache do
   description 'Apache2 web server.'
   apt 'apache2 apache2.2-common apache2-mpm-prefork apache2-utils libexpat1 ssl-cert' do
@@ -47,7 +49,7 @@ package :passenger_conf do
   apache_conf_dir = "/etc/apache2/conf.d"
 
   # Create the passenger conf file
-  transfer File.expand_path('../apache/passenger.conf.erb', __FILE__), "#{apache_conf_dir}/passenger.conf" do
+  transfer File.join(STACK_CONFIG_PATH,'apache/passenger.conf.erb'), "#{apache_conf_dir}/passenger.conf" do
     sudo true
     mode 0644
     # Do not restart apache as rails_apps package will update site specific configuration files and will restart at the end
