@@ -10,6 +10,7 @@ ftp_proxy=#{http_proxy}
 EOS
 
     push_text config, "/etc/environment", :sudo => true
+    reconnect
 
     verify do
       config.split(/\n/).all?{|line| file_contains "/etc/environment", line}
