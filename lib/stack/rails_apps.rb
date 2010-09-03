@@ -21,7 +21,7 @@ package :rails_apps do
   end
 
   # requires :passenger
-  requires :rails_user, :bundler, :rails_app_gems, :rails_sites
+  requires :rails_user, :bundler, :libxml, :rails_app_gems, :rails_sites
 end
 
 package :rails_user do
@@ -32,6 +32,8 @@ package :rails_user do
   noop do
     pre :install, "/usr/sbin/groupadd #{RAILS_GROUP}"
     pre :install, "/usr/sbin/useradd -g #{RAILS_GROUP} -c \"Ruby on Rails applications\" -m -s /bin/bash #{RAILS_USER}"
+    pre :install, "chmod 0750 /home/#{RAILS_USER}"
+    pre :install, "/usr/sbin/usermod -a -G #{RAILS_GROUP} apache"
   end
 
   verify do
@@ -132,12 +134,25 @@ package :rails_app_gems do
 end
 
 package :bundler do
-  BUNDLER_VERSION = "1.0.0.rc.5"
+  bundler_version = INSTALL_CONFIG[:bundler_version]
   gem 'bundler' do
-    version BUNDLER_VERSION
+    version bundler_version
     post :install, "ln -sf #{REE_PATH}/bin/bundle /usr/local/bin/bundle"
   end
   verify do
-    has_executable_with_version "#{REE_PATH}/bin/bundle", BUNDLER_VERSION
+    has_executable_with_version "#{REE_PATH}/bin/bundle", bundler_version
+    has_symlink "/usr/local/bin/bundle", "#{REE_PATH}/bin/bundle"
+  end
+end
+
+package :libxml do
+  case INSTALL_PLATFORM
+  when 'ubuntu'
+    apt 'libxslt-dev libxml2-dev'
+  when 'redhat', 'centos'
+    yum 'libxml2 libxml2-devel libxslt libxslt-devel'
+    %w(libxml2 libxml2-devel libxslt libxslt-devel).each do |yum_package|
+      has_yum yum_package
+    end
   end
 end
