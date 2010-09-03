@@ -16,7 +16,8 @@ package :apache do
     end
 
   when 'redhat', 'centos'
-    yum 'httpd-devel apr-devel'
+
+    yum 'httpd'
 
     verify do
       has_executable '/usr/sbin/httpd'
@@ -25,15 +26,49 @@ package :apache do
   end
 
   requires :build_essential
-  # optional :apache_etag_support, :apache_deflate_support, :apache_expires_support
+  optional :apache_envvars
 end
 
-package :apache2_prefork_dev do
+package :apache_dev do
   description 'A dependency required by some packages.'
   case INSTALL_PLATFORM
   when 'ubuntu'
     apt 'apache2-prefork-dev'
+  when 'redhat', 'centos'
+    # on Centos 5.2/5.3 need at first explicitly install all cyrus* packages
+    # to avoid failure when installing httpd-devel
+    yum 'cyrus*'
+    yum 'httpd-devel apr-devel apr-util-devel'
+
+    %w(httpd-devel apr-devel apr-util-devel).each do |yum_package|
+      has_yum yum_package
+    end
   end
+end
+
+package :apache_envvars do
+  if http_proxy = INSTALL_CONFIG[:http_proxy]
+    config = <<-EOS
+# rails-stack-set-proxy
+export http_proxy=#{http_proxy}
+export https_proxy=#{http_proxy}
+export ftp_proxy=#{http_proxy}
+EOS
+
+    apache_envvars_file = case INSTALL_PLATFORM
+      when 'ubuntu'
+        '/etc/apache2/envvars'
+      when 'redhat', 'centos'
+        '/etc/sysconfig/httpd'
+      end
+    push_text config, apache_envvars_file, :sudo => true
+
+    verify do
+      config.split(/\n/).all?{|line| file_contains apache_envvars_file, line}
+    end
+
+  end
+
 end
 
 package :passenger do
@@ -41,7 +76,7 @@ package :passenger do
   version '2.2.15'
   PASSENGER_VERSION = version
 
-  requires :apache, :apache2_prefork_dev, :ruby_enterprise
+  requires :apache, :apache_dev, :ruby_enterprise
   requires :passenger_gem, :passenger_conf
 end
 
@@ -75,60 +110,4 @@ package :passenger_conf do
     # post :install, "/etc/init.d/apache2 restart"
   end
 
-end
-
-
-
-
-
-# These "installers" are strictly optional, I believe
-# that everyone should be doing this to serve sites more quickly.
-
-# Enable ETags
-package :apache_etag_support do
-  apache_conf = "/etc/apache2/apache2.conf"
-  config = <<eol
-  # Passenger-stack-etags
-  FileETag MTime Size
-eol
-
-  push_text config, apache_conf, :sudo => true
-  verify { file_contains apache_conf, "Passenger-stack-etags"}
-end
-
-# mod_deflate, compress scripts before serving.
-package :apache_deflate_support do
-  apache_conf = "/etc/apache2/apache2.conf"
-  config = <<eol
-  # Passenger-stack-deflate
-  <IfModule mod_deflate.c>
-    # compress content with type html, text, and css
-    AddOutputFilterByType DEFLATE text/css text/html text/javascript application/javascript application/x-javascript text/js text/plain text/xml
-    <IfModule mod_headers.c>
-      # properly handle requests coming from behind proxies
-      Header append Vary User-Agent
-    </IfModule>
-  </IfModule>
-eol
-
-  push_text config, apache_conf, :sudo => true
-  verify { file_contains apache_conf, "Passenger-stack-deflate"}
-end
-
-# mod_expires, add long expiry headers to css, js and image files
-package :apache_expires_support do
-  apache_conf = "/etc/apache2/apache2.conf"
-
-  config = <<eol
-  # Passenger-stack-expires
-  <IfModule mod_expires.c>
-    <FilesMatch "\.(jpg|gif|png|css|js)$">
-         ExpiresActive on
-         ExpiresDefault "access plus 1 year"
-     </FilesMatch>
-  </IfModule>
-eol
-
-  push_text config, apache_conf, :sudo => true
-  verify { file_contains apache_conf, "Passenger-stack-expires"}
 end
