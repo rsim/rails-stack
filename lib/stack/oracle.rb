@@ -89,7 +89,12 @@ package :oracle_apache_envvars do
 # rails-stack-oracle-client
 export TNS_ADMIN=#{ORACLE_TNSNAMES_PATH}
 EOS
-  apache_envvars_file = "/etc/apache2/envvars"
+  apache_envvars_file = case INSTALL_PLATFORM
+    when 'ubuntu'
+      '/etc/apache2/envvars'
+    when 'redhat', 'centos'
+      '/etc/sysconfig/httpd'
+    end
   push_text config, apache_envvars_file, :sudo => true
 
   verify do
