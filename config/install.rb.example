@@ -31,6 +31,8 @@ when 'demo'
 end
 # common configuration parameters
 ::INSTALL_CONFIG.merge!({
+  # which bundler version should be installed
+  :bundler_version => '1.0.0',
   # specify mirror copy of Oracle Instant Client 64-bit Linux client zip files
   # (as original Oracle location is password protected)
   :oracle_downloads_url => "http://example.com/downloads",
@@ -64,6 +66,9 @@ policy :stack, :roles => :app do
   requires :ruby_enterprise         # Ruby Enterprise edition
   requires :apache
   requires :oracle_client
+  # requires :mysql
+  # requires :sqlite
+
   requires :git
   requires :subversion
   requires :passenger
