@@ -23,7 +23,7 @@ package :ree_dependencies do
   when 'ubuntu'
     apt %w(zlib1g-dev libreadline5-dev libssl-dev)
   when 'redhat', 'centos'
-    dependencies = %w(zlib-devel readline-devel openssl-devel)
+    dependencies = %w(zlib-devel readline-devel ncurses-devel openssl-devel)
     yum dependencies
     verify do
       dependencies.each{|d| has_yum d}
