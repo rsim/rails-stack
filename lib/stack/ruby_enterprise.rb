@@ -5,8 +5,10 @@ package :ruby_enterprise do
 
   binaries = %w(erb gem irb rackup rails rake rdoc ree-version ri ruby testrb)
   source "http://rubyforge.org/frs/download.php/71096/ruby-enterprise-#{version}.tar.gz" do
-    custom_install "sudo ./installer --auto=#{REE_PATH}"
-    binaries.each {|bin| post :install, "ln -s #{REE_PATH}/bin/#{bin} /usr/local/bin/#{bin}" }
+    # PATCH: comment out install_useful_libraries call to avoid installation of additional libraries
+    pre :install, 'cp installer.rb installer.rb.bak && sudo sed -r "s/^(\s+)(install_useful_libraries)/\1# \2/" installer.rb.bak | sudo tee installer.rb'
+    custom_install "sudo ./installer --auto=#{REE_PATH} --dont-install-useful-gems"
+    binaries.each {|bin| post :install, "ln -sf #{REE_PATH}/bin/#{bin} /usr/local/bin/#{bin}" }
   end
 
   verify do
