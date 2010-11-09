@@ -46,7 +46,7 @@ package :oracle_sqlplus_client do
   binary "#{ORACLE_DOWNLOADS_URL}/sqlplus-10.2.0.4.0-linux-x86_64.zip" do
     prefix ORACLE_HOME
     post :install, "ln -sf #{ORACLE_CLIENT_PATH}/sqlplus /usr/local/bin/sqlplus"
-    post :install, "ldconfig"
+    post :install, "/sbin/ldconfig"
   end
   verify do
     has_executable_with_version "#{ORACLE_CLIENT_PATH}/sqlplus", version
