@@ -151,8 +151,10 @@ package :libxml do
     apt 'libxslt-dev libxml2-dev'
   when 'redhat', 'centos'
     yum 'libxml2 libxml2-devel libxslt libxslt-devel'
-    %w(libxml2 libxml2-devel libxslt libxslt-devel).each do |yum_package|
-      has_yum yum_package
+    verify do
+      %w(libxml2 libxml2-devel libxslt libxslt-devel).each do |yum_package|
+        has_yum yum_package
+      end
     end
   end
 end
