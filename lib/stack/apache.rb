@@ -40,8 +40,10 @@ package :apache_dev do
     yum 'cyrus*'
     yum 'httpd-devel apr-devel apr-util-devel'
 
-    %w(httpd-devel apr-devel apr-util-devel).each do |yum_package|
-      has_yum yum_package
+    verify do
+      %w(httpd-devel apr-devel apr-util-devel).each do |yum_package|
+        has_yum yum_package
+      end
     end
   end
 end
