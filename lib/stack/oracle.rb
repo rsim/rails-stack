@@ -15,7 +15,15 @@ package :oracle_client_dependencies do
     pre :install, "mkdir -p #{ORACLE_HOME}"
     pre :install, "sh -c 'echo \"#{ORACLE_CLIENT_PATH}\" > /etc/ld.so.conf.d/oracle.conf'"
   end
-  apt 'zip'
+  case INSTALL_PLATFORM
+  when 'ubuntu'
+    apt 'zip'
+  when 'redhat', 'centos'
+    yum 'zip'
+    verify do
+      has_yum 'zip'
+    end
+  end
 end
 
 package :oracle_basic_client do
